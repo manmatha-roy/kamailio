@@ -1,0 +1,24 @@
+#!/bin/sh
+
+sudo apt update
+sudo apt upgrade -y
+sudo apt install -y vim mysql-server git wireshark flex  bison libmysqlclient-dev build-essential libssl libcurl llibxml2 libpcre3
+git clone --depth 1 --no-single-branch https://github.com/kamailio/kamailio kamailio
+cd kamailio
+make include_modules="db_mysql" cfg
+make Q=0 all
+sudo make install
+vim /usr/local/etc/kamailio/kamctlrc
+/usr/local/sbin/kamdbctl create
+vim /usr/local/etc/kamailio/kamailio.cfg
+vim pkg/kamailio/deb/debian/kamailio.init 
+sudo cp pkg/kamailio/deb/debian/kamailio.init /etc/init.d/kamailio
+sudo chmod 755 /etc/init.d/kamailio 
+vim pkg/kamailio/deb/debian/kamailio.default
+sudo cp pkg/kamailio/deb/debian/kamailio.default /etc/default/kamailio
+sudo mkdir -p /var/run/kamailio
+sudo adduser --quiet --system --group --disabled-password \
+        --shell /bin/false --gecos "Kamailio" \
+        --home /var/run/kamailio kamailio
+chown kamailio:kamailio /var/run/kamailio
+sudo /etc/init.d/kamailio start
